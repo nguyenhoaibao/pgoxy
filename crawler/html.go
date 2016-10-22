@@ -1,8 +1,6 @@
 package crawler
 
 import (
-	"log"
-
 	"github.com/nguyenhoaibao/pgoxy/app"
 	"github.com/nguyenhoaibao/pgoxy/net"
 )
@@ -17,7 +15,7 @@ func init() {
 func (c htmlCrawler) Crawl(feed *app.Feed) ([]*app.Result, error) {
 	html, err := net.GetHTML(feed.Url)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	c.parse(feed, html)

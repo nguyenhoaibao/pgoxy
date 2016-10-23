@@ -3,49 +3,26 @@ package app
 import (
 	"encoding/json"
 	"os"
-	"path/filepath"
 )
 
-const dataDir = "data"
+const dataFile = "../data/sites.json"
 
 type Feed struct {
-	Type          string `json:"type"`
-	Name          string `json:"name"`
-	Url           string `json:"url"`
-	CrawlingPages int    `json:"crawling_pages"`
+	Type string `json:"type"`
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 func GetFeeds() ([]*Feed, error) {
-	d, err := os.Open(dataDir)
-	if err != nil {
-		return nil, err
-	}
-
-	defer d.Close()
-
-	files, err := d.Readdir(-1)
+	file, err := os.Open(dataFile)
 	if err != nil {
 		return nil, err
 	}
 
 	var feeds []*Feed
-
-	for _, file := range files {
-		if file.Mode().IsRegular() {
-			fileData, err := os.Open(dataDir + string(filepath.Separator) + file.Name())
-			if err != nil {
-				return nil, err
-			}
-
-			var feed Feed
-
-			err = json.NewDecoder(fileData).Decode(&feed)
-			if err != nil {
-				return nil, err
-			}
-
-			feeds = append(feeds, &feed)
-		}
+	err = json.NewDecoder(file).Decode(&feeds)
+	if err != nil {
+		return nil, err
 	}
 
 	return feeds, nil

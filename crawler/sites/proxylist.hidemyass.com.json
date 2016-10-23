@@ -1,0 +1,24 @@
+{
+  "name": "hidemyass",
+  "parser": {
+    "container": {
+      "selector": "table#listable tbody"
+    },
+    "items": {
+      "selector": "tr"
+    },
+    "item": {
+      "selector": "td"
+    },
+    "data": {
+      "ip": {
+        "order": 1,
+        "method": "text"
+      },
+      "port": {
+        "order": 2,
+        "method": "text"
+      }
+    }
+  }
+}

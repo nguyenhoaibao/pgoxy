@@ -1,28 +1,82 @@
 package crawler
 
 import (
-	"github.com/nguyenhoaibao/pgoxy/app"
-	"github.com/nguyenhoaibao/pgoxy/net"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
-type htmlCrawler struct{}
-
-func init() {
-	var crawler htmlCrawler
-	app.Register("html", crawler)
+type htmlCrawler struct {
+	name string
+	doc  *goquery.Document
 }
 
-func (c htmlCrawler) Crawl(feed *app.Feed) ([]*app.Result, error) {
-	html, err := net.GetHTML(feed.Url)
+type htmlParserSelector struct {
+	Selector string `json:"selector"`
+}
+
+type htmlParserData struct {
+	IP struct {
+		Order  int    `json:"order"`
+		Method string `json:"method"`
+	} `json:"ip"`
+	Port struct {
+		Order  int    `json:"order"`
+		Method string `json:"method"`
+	} `json:"port"`
+}
+
+type htmlParser struct {
+	Name   string `json:"name"`
+	Parser struct {
+		Container htmlParserSelector `json:"container"`
+		Items     htmlParserSelector `json:"items"`
+		Item      htmlParserSelector `json:"item"`
+		Data      htmlParserData     `json:"data"`
+	} `json:"parser"`
+}
+
+func NewHtmlCrawler(name string, d *goquery.Document) *htmlCrawler {
+	return &htmlCrawler{name: name, doc: d}
+}
+
+func GetDocument(url string) (*goquery.Document, error) {
+	if url == "" {
+		return nil, errors.New("Url is required")
+	}
+
+	doc, err := goquery.NewDocument(url)
+	return doc, err
+}
+
+func (c *htmlCrawler) Crawl() ([]*Result, error) {
+	parserFile := "sites" + string(filepath.Separator) + c.name + ".json"
+	f, err := os.Open(parserFile)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var p htmlParser
+	err = json.NewDecoder(f).Decode(&p)
 	if err != nil {
 		return nil, err
 	}
 
-	c.parse(feed, html)
+	var results []*Result
 
-	return nil, nil
-}
+	container := c.doc.Find(p.Parser.Container.Selector)
+	items := container.Find(p.Parser.Items.Selector)
+	items.Each(func(_ int, s *goquery.Selection) {
+		ip := strings.TrimSpace(s.Find(p.Parser.Item.Selector).Eq(p.Parser.Data.IP.Order).Text())
+		port := strings.TrimSpace(s.Find(p.Parser.Item.Selector).Eq(p.Parser.Data.Port.Order).Text())
 
-func (c htmlCrawler) parse(feed *app.Feed, html string) ([]*app.Result, error) {
-	return nil, nil
+		results = append(results, &Result{IP: ip, Port: port})
+	})
+
+	return results, nil
 }

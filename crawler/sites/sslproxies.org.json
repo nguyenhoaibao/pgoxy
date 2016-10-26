@@ -2,7 +2,7 @@
   "name": "hidemyass",
   "parser": {
     "container": {
-      "selector": "table#listable tbody"
+      "selector": "table#proxylisttable tbody"
     },
     "items": {
       "selector": "tr"
@@ -12,11 +12,11 @@
     },
     "data": {
       "ip": {
-        "order": 1,
+        "order": 0,
         "method": "text"
       },
       "port": {
-        "order": 2,
+        "order": 1,
         "method": "text"
       }
     }

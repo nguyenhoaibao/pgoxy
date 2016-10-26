@@ -53,8 +53,13 @@ func GetDocument(url string) (*goquery.Document, error) {
 	return doc, err
 }
 
-func (c *htmlCrawler) Crawl() ([]*Result, error) {
-	parserFile := "sites" + string(filepath.Separator) + c.name + ".json"
+func GetParserConfig(name string) (*htmlParser, error) {
+	if name == "" {
+		return nil, errors.New("Name is required")
+	}
+
+	parserFile := "sites" + string(filepath.Separator) + name + ".json"
+
 	f, err := os.Open(parserFile)
 	if err != nil {
 		return nil, err
@@ -63,10 +68,11 @@ func (c *htmlCrawler) Crawl() ([]*Result, error) {
 
 	var p htmlParser
 	err = json.NewDecoder(f).Decode(&p)
-	if err != nil {
-		return nil, err
-	}
 
+	return &p, err
+}
+
+func (c *htmlCrawler) Parse(p *htmlParser) []*Result {
 	var results []*Result
 
 	container := c.doc.Find(p.Parser.Container.Selector)
@@ -77,6 +83,17 @@ func (c *htmlCrawler) Crawl() ([]*Result, error) {
 
 		results = append(results, &Result{IP: ip, Port: port})
 	})
+
+	return results
+}
+
+func (c *htmlCrawler) Crawl() ([]*Result, error) {
+	p, err := GetParserConfig(c.name)
+	if err != nil {
+		return nil, err
+	}
+
+	results := c.Parse(p)
 
 	return results, nil
 }

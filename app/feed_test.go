@@ -13,6 +13,6 @@ func TestGetFeeds(t *testing.T) {
 	}
 
 	if len(feeds) <= 0 {
-		t.Fatal("Cannot load any feed")
+		t.Fatal("Total feeds should greater than 0")
 	}
 }
